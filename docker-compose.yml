@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16
+    container_name: todo_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: todo_db
+    ports:
+      - "5433:5432"  # ✅ Changed host port to 5433 to avoid conflict
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - todo-net
+
+  backend:
+    build: ./backend
+    container_name: todo_backend
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=todo_db
+    depends_on:
+      - db
+    networks:
+      - todo-net
+
+  frontend:
+    build: ./frontend
+    container_name: todo_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:4000
+    depends_on:
+      - backend
+    networks:
+      - todo-net
+
+volumes:
+  pgdata:
+
+networks:
+  todo-net:
